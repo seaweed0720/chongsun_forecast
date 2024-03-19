@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+    <head>
+	 <title>22대 총선을 예측해보세요!</title>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/item-series.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <style>
+        html, body, #map {
+            width: 95%;
+            height: 100%;
+            padding: 0;
+            margin: 0 auto;
+        }
+		 .color-palette {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: white;
+            padding: 0px;
+			z-index: 1000;
+        }
+
+        .color {
+            width: 20px;
+            height: 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        </style>
+        <title></title>
+    </head>
+	<p style="font-size: 40px; font-family:맑은 고딕; font-weight: bold; color: #0B615E;"> 22대 총선을 예측해보세요!</p>
+    <body style="background-color:#F7F8E0;">
+	<p style="font-size: 30px; font-family: 맑은 고딕; font-weight: bold; color: #0B615E;"> 지역구 지도</p>
+<button style="background-color:white; border-width:1px; border-color:#000000; border-radius:5px; font-family:맑은 고딕;" onclick="toggleContent('content1')">설명서</button>
+<div id="content1" style="display: none; background-color:#F7F8E0; ">
+<br style="background-color:#F7F8E0">1.우측 하단 팔레트에서 원하는 정당의 색을 클릭해주세요!</br>
+<br style="background-color:#F7F8E0">2.클릭한 색으로 지역구를 클릭해주세요!</br>
+<br style="background-color:#F7F8E0">3.원하는 색을 색칠하고 임의의 다른 색을 클릭하면 우측 상단의 계산기가 업데이트 됩니다.</br>
+<br style="background-color:#F7F8E0">4.색을 모두 칠하셨으면, 계산기에 업데이트된 의석을 '지역구 의석' 칸에 기입해주세요!</br>
+<br style="background-color:#F7F8E0">*팔레트 ON/OFF 기능은 랜덤한 특정 색에서만 작동됩니다. 당황하지 마시고 다른 색으로 선택한 뒤 다시 시도해보세요!(제작자가 HTML에 약합니다ㅠㅠ)</br>
+<br style="background-color:#F7F8E0">*진보당은 국민의힘과 구별을 위해 하늘색으로 색을 지정하였습니다. 양해 부탁드립니다!</br>
+</div>
+
+<script>
+  function toggleContent1() {
+    var content = document.getElementById("content");
+    if (content.style.display === "none") {
+      content.style.display = "block";
+    } else {
+      content.style.display = "none";
+    }
+  }
+</script>
+
+	<hr>
+        <div id="map">
+		<div id="colorCalculator" class="calculator"></div>
+		<div class="button-container">
+	<button id="togglePaletteButton">팔레트 ON/OFF</button>
+	</div>
+<div id="colorPalette" class="color-palette">
+    <div class="color-item">
+        <div class="color" style="background-color: #152484;"></div>
+        <div class="color-text">더불어민주당</div>
+        </div>
+		<div class="color-item">
+        <div class="color" style="background-color: #E61E2B;"></div>
+		<div class="color-text">국민의힘</div>
+		</div>
+		<div class="color-item">
+        <div class="color" style="background-color: #007C36;"></div>
+		<div class="color-text">녹색정의당</div>
+		</div>
+	    <div class="color-item">
+        <div class="color" style="background-color: #FF7920;"></div>
+		<div class="color-text">개혁신당</div>
+		</div>
+		<div class="color-item">
+        <div class="color" style="background-color: #B3F9FA;"></div>
+		<div class="color-text">진보당</div>
+		</div>
+	    <div class="color-item">
+        <div class="color" style="background-color: #17253E;"></div>
+		<div class="color-text">새로운미래</div>
+		</div>
+		<div class="color-item">
+        <div class="color" style="background-color: #808080;"></div>
+		<div class="color-text">무소속</div>
+		</div>
+		<div class="color-item">
+        <div class="color" style="background-color: #c9bf9b;"></div>
+		<div class="color-text">기타정당</div>
+		</div>
+		</div>
+        </div>
+		
+
+<p style="font-size: 30px; font-family: 맑은 고딕; font-weight: bold; color: #0B615E;"> 지역구/비례대표 입력</p>
+
+
+<button style="background-color:white; border-width:1px; border-color:#000000; border-radius:5px; font-family:맑은 고딕;" onclick="toggleContent('content2')">비례대표 참조</button>
+<div style="display:none;" id="content2" >
+<br>22대 총선은 연동형 비례대표제로 진행됩니다. 본 페이지는 사용자 여러분의 계산상 편의를 위해 임의로 의석을 지정해주는 방식을 채택하고 있습니다. 양해 바랍니다!</br>
+<br>21대 총선의 경우 총 47명 중 미래한국당에서 33.84%를 득표해 19석, 더불어민주당에서 33.35%를 득표해 17석, 정의당에서 9.67%를 득표해 5석, 국민의당에서 6.79%를 득표해 3석, 열린민주당에서 5.42%를 득표해 3석을 획득하였습니다. </br>
+</div>
+
+<hr>
+
+<div>
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0; border-radius: 5px; }
+.tg td{border-color:black; border-radius: 5px; border-style:solid;border-width:1px;font-family:맑은 고딕; 
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black; border-radius: 5px; border-style:solid;border-width:1px;font-family:맑은 고딕; 
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-wmr3{background-color:#c5c5c5; border-radius: 5px; border-color:#ffffff;font-family:맑은 고딕 text-align:center;
+  vertical-align:top}
+.tg .tg-oox0{background-color:#ebe0c2; border-radius: 5px; border-color:#ffffff;color:#000000;text-align:center;vertical-align:top}
+.tg .tg-zv4m{border-color:#ffffff;border-radius: 5px; text-align:center;vertical-align:top}
+.tg .tg-vvj7{background-color:#C7D1FF;border-radius: 5px; border-color:#ffffff; text-align:center; vertical-align:top}
+.tg .tg-4z8w{background-color:#68a6ff;border-radius: 5px; border-color:#ffffff;font-family:맑은 고딕 !important;text-align:center;
+  vertical-align:top}
+.tg .tg-smu1{background-color:#ff5f5b;border-radius: 5px; border-color:#ffffff;text-align:center;vertical-align:top}
+.tg .tg-zthf{background-color:#9ad756;border-radius: 5px; border-color:#ffffff;text-align:center;vertical-align:top}
+.tg .tg-n6ox{background-color:#ff9746;border-radius: 5px; border-color:#ffffff;text-align:center;vertical-align:top}
+.tg .tg-h8fu{background-color:#89fffb;border-radius: 5px; border-color:#ffffff;text-align:center;vertical-align:top}
+.tg .tg-fzpj{background-color:#575ffe;border-radius: 5 px; border-color:#ffffff;font-family: 맑은 고딕 !important;text-align:center;
+  vertical-align:top}
+</style>
+<table class="tg">
+<thead>
+  <tr>
+  <th class="tg-vvj7" colspan="8"><span style="font-weight: bold; font-size:20px;">지역구 의석</span><span style="font-size:11px;text-align:right; display:inline-block;">*정원 254석</span></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="tg-4z8w" style="font-weight: bold; font-size:14px">더불어민주당</td>
+    <td class="tg-smu1" style="font-weight: bold; font-size:14px">국민의힘</td>
+    <td class="tg-zthf" style="font-weight: bold; font-size:14px">녹색정의당</td>
+    <td class="tg-n6ox"style="font-weight: bold; font-size:14px">개혁신당</td>
+    <td class="tg-h8fu" style="font-weight: bold; font-size:14px">진보당</td>
+    <td class="tg-fzpj" style="font-weight: bold; font-size:14px">새로운미래</td>
+    <td class="tg-wmr3" style="font-weight: bold; font-size:14px; text-align:center">무소속</td>
+    <td class="tg-oox0" style="font-weight: bold; font-size:14px">기타정당</td>
+  </tr>
+  <tr>
+    <td class="tg-zv4m"><input style="width:40px;" type="number" id="party1" value="0"><br></td>
+    <td class="tg-zv4m"><input style="width:40px;" type="number" id="party2" value="0"><br></td>
+    <td class="tg-zv4m"><input style="width:40px;" type="number" id="party3" value="0"><br></td>
+    <td class="tg-zv4m"><input style="width:40px;" type="number" id="party4" value="0"><br></td>
+    <td class="tg-zv4m"><input style="width:40px;" type="number" id="party5" value="0"><br></td>
+    <td class="tg-zv4m"><input style="width:40px;" type="number" id="party6" value="0"><br></td>
+    <td class="tg-zv4m"><input style="width:40px;" type="number" id="party7" value="0"><br></td>
+    <td class="tg-zv4m"><input style="width:40px;" type="number" id="party8" value="0"><br></td>
+  </tr>
+</tbody>
+</table>
+</div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<div>
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:맑은 고딕;font-size:14px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:맑은 고딕;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-jexk{background-color:#ff5f5b;border-color:#ffffff;font-weight:bold;text-align:center;vertical-align:top}
+.tg .tg-utbr{background-color:#65CBFF;border-color:#ffffff;font-weight:bold;text-align:center;vertical-align:top}
+.tg .tg-c8a6{background-color:#9ad756;border-color:#ffffff;font-weight:bold;text-align:center;vertical-align:top}
+.tg .tg-w4mi{background-color:#575ffe;border-color:#ffffff;font-family:맑은 고딕 !important;font-weight:bold;
+  text-align:left;vertical-align:top}
+.tg .tg-zv4m{border-color:#ffffff;text-align:left;vertical-align:top}
+.tg .tg-ov2o{background-color:#ff9746;border-color:#ffffff;font-weight:bold;text-align:center;vertical-align:top}
+.tg .tg-w8gl{background-color:#ebe0c2;border-color:#ffffff;color:#000000;font-weight:bold;text-align:center;vertical-align:top}
+.tg .tg-vvj7{background-color:#C7D1FF;border-color:#ffffff;text-align:center; vertical-align:top}
+.tg .tg-suwv{background-color:#68a6ff;border-color:#ffffff;font-family:맑은 고딕 !important;font-weight:bold;
+  text-align:center;vertical-align:top}
+</style>
+<table class="tg">
+<thead>
+  <tr>
+    <th class="tg-vvj7" colspan="7"><span style="font-weight:bold; font-size:20px;">비례대표 의석</span><small style="font-size:11px;">*정원 46석</small></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="tg-suwv" style="font-weight: bold; font-size:14px">더불어민주연합</td>
+    <td class="tg-jexk" style="font-weight: bold; font-size:14px">국민의미래</td>
+    <td class="tg-c8a6" style="font-weight: bold; font-size:14px">녹색정의당</td>
+    <td class="tg-ov2o" style="font-weight: bold; font-size:14px">개혁신당</td>
+    <td class="tg-utbr" style="font-weight: bold; font-size:14px">조국혁신당</td>
+    <td class="tg-w4mi" style="font-weight: bold; font-size:14px">새로운미래</td>
+    <td class="tg-w8gl" style="font-weight: bold; font-size:14px">기타정당</td>
+  </tr>
+  <tr>
+    <td class="tg-zv4m"><input style="width:40px;" type="number" id="1party1" value="0"><br></td>
+    <td class="tg-zv4m"><input style="width:40px;" type="number" id="1party2" value="0"><br></td>
+    <td class="tg-zv4m"><input style="width:40px;" type="number" id="1party3" value="0"><br></td>
+    <td class="tg-zv4m"><input style="width:40px;" type="number" id="1party4" value="0"><br></td>
+    <td class="tg-zv4m"><input style="width:40px;" type="number" id="1party9" value="0"><br></td>
+    <td class="tg-zv4m"><input style="width:40px;" type="number" id="1party6" value="0"><br></td>
+    <td class="tg-zv4m"><input style="width:40px;" type="number" id="1party8" value="0"><br></td>
+  </tr>
+</tbody>
+</table>
+</div>
+<div>
+    <br><br>
+    <button style="background-color:white; border-width:1px; border-color:#000000; border-radius:5px; font-family:맑은 고딕;" onclick="updateChart()">국회 생성</button><br>
+
+<p style="font-size: 30px; font-family: 맑은 고딕; font-weight: bold; color: #0B615E;"> 예측 결과</p>
+
+<hr>
+		<div id="container" style="width:100%; align:center; height:400px;"></div>
+		</div>
+		
+		<hr>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="data/22sun_1.js"></script>
+        <script>
+        var map = L.map('map', {
+            zoomControl:true, maxZoom:28, minZoom:1
+        }).fitBounds([[35.96659990877656,125.36935067101777],[38.535785985094165,131.489091122605]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        document.querySelector(".leaflet-popup-pane").addEventListener("load", function(event) {
+          var tagName = event.target.tagName,
+            popup = map._popup;
+          // Also check if flag is already set.
+          if (tagName === "IMG" && popup && !popup._updated) {
+            popup._updated = true; // Set flag to prevent looping.
+            popup.update();
+          }
+        }, true);
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_VWorldStreet_0');
+        map.getPane('pane_VWorldStreet_0').style.zIndex = 400;
+        var layer_VWorldStreet_0 = L.tileLayer('https://xdworld.vworld.kr/2d/Base/service/{z}/{x}/{y}.png', {
+            pane: 'pane_VWorldStreet_0',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 18
+        });
+        layer_VWorldStreet_0;
+        map.addLayer(layer_VWorldStreet_0);
+        function pop_22sun_1(feature, layer) {
+            var popupContent = '<table>\
+                    <tr style="font-size: 10pt; font-weight: bold; font-family: 맑은 고딕;">\
+                        <td colspan="2">' + (feature.properties['adm_dr_nm'] !== null ? autolinker.link(feature.properties['adm_dr_nm'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+        function style_22sun_1_0() {
+            return {
+                pane: 'pane_22sun_1',
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 0.8,
+                fillColor: 'rgba(255,255,255,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_22sun_1');
+        map.getPane('pane_22sun_1').style.zIndex = 401;
+        map.getPane('pane_22sun_1').style['mix-blend-mode'] = 'normal';
+        var layer_22sun_1 = new L.geoJson(json_22sun_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_22sun_1',
+            layerName: 'layer_22sun_1',
+            pane: 'pane_22sun_1',
+            onEachFeature: pop_22sun_1,
+            style: style_22sun_1_0,
+        });
+        bounds_group.addLayer(layer_22sun_1);
+        map.addLayer(layer_22sun_1);
+        setBounds();
+		resetLabels([layer_22sun_1]);
+        map.on("zoomend", function(){
+            resetLabels([layer_22sun_1]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([layer_22sun_1]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([layer_22sun_1]);
+        });
+								        var selectedColor = null;
+
+        var colorElements = document.querySelectorAll('.color');
+        colorElements.forEach(function (colorElement) {
+            colorElement.addEventListener('click', function () {
+                selectedColor = colorElement.style.backgroundColor;
+            });
+        });
+
+        layer_22sun_1.eachLayer(function (layer) {
+            layer.on('click', function () {
+                if (selectedColor) {
+                    layer.setStyle({ fillColor: selectedColor });
+                }
+});
+        });
+	
+
+// Initialize an object to store color counts
+var colorCounts = {};
+
+var colorLabels = {
+'rgba(255,255,255,1.0)' : '잔여 의석',
+'rgb(21, 36, 132)' : '더민주 우세',
+'rgb(201, 191, 155)' : '기타 우세',
+'rgb(230, 30, 43)' : '국힘 우세',
+'rgb(0, 124, 54)' : '녹정 우세',
+'rgb(179, 249, 250)' : '진보 우세',
+'rgb(23, 37, 62)' : '새미래 우세',
+'rgb(128, 128, 128)' : '무소속 우세',
+'rgb(255, 121, 32)' : '개혁 우세',
+    // Add labels for other RGB color codes as needed
+};
+
+
+// Function to update the color counters
+function updateColorCounters() {
+    // Clear the previous content of the calculator
+    var calculator = document.getElementById('colorCalculator');
+    calculator.innerHTML = '';
+
+    // Initialize a variable to store the counted layers
+    var countedLayers = [];
+
+    // Loop through each feature in your GeoJSON
+    layer_22sun_1.eachLayer(function (layer) {
+        // Check if the layer has a fillColor
+        if (layer.options.fillColor) {
+            // Get the RGB color as a string
+            var rgbColor = layer.options.fillColor;
+
+            // Use the colorLabels mapping to display the label
+            var label = colorLabels[rgbColor] || rgbColor; // Use the label or the RGB color if not found
+
+            // Update the colorCounts object
+            colorCounts[label] = (colorCounts[label] || 0) + 1;
+
+            // Log the details of the counted layer for debugging
+            countedLayers.push({
+                label: label,
+                rgbColor: rgbColor,
+                layer: layer
+            });
+        }
+    });
+	
+	// Get references to the button and the color palette
+var toggleButton = document.getElementById('togglePaletteButton');
+var colorPalette = document.getElementById('colorPalette');
+
+// Add a click event listener to the button
+toggleButton.addEventListener('click', function () {
+    // Toggle the 'hidden' class to show/hide the color palette
+    colorPalette.classList.toggle('hidden');
+});
+
+
+    // Display the color counts in the calculator
+    for (var color in colorCounts) {
+        var calculatorContent = `<p>${color}: ${colorCounts[color]}</p>`;
+        calculator.innerHTML += calculatorContent;
+    }
+
+    // Log the details of the counted layers for debugging
+    console.log('Counted Layers:', countedLayers);
+}
+
+
+// Add an event listener to update the color counters when a color is selected
+var colorElements = document.querySelectorAll('.color');
+colorElements.forEach(function (colorElement) {
+    colorElement.addEventListener('click', function () {
+        // Reset the color counts when selecting a new color
+        colorCounts = {};
+
+        selectedColor = colorElement.style.backgroundColor;
+        // Update the color counters when a color is selected
+        updateColorCounters();
+    });
+});
+
+updateColorCounters();
+
+        </script>
+		
+		<script>
+  function toggleContent(contentId) {
+    var content = document.getElementById(contentId);
+    if (content.style.display === "none") {
+      content.style.display = "block";
+    } else {
+      content.style.display = "none";
+    }
+  }
+</script>
+		
+		<script>
+function updateChart() {
+        const party1Seats = parseInt(document.getElementById('party1').value) ;
+        const party1_1Seats = parseInt(document.getElementById('1party1').value);
+        const party2Seats = parseInt(document.getElementById('party2').value);
+		const party2_1Seats = parseInt(document.getElementById('1party2').value) ;
+        const party3Seats = parseInt(document.getElementById('party3').value);
+        const party4Seats = parseInt(document.getElementById('party4').value) ;
+        const party5Seats = parseInt(document.getElementById('party5').value);
+        const party6Seats = parseInt(document.getElementById('party6').value);
+        const party7Seats = parseInt(document.getElementById('party7').value) ;
+		const party8Seats = parseInt(document.getElementById('party8').value) ;
+		const party9Seats = parseInt(document.getElementById('1party9').value);
+		
+const party3_1Seats = parseInt(document.getElementById('1party3').value);
+const party4_1Seats = parseInt(document.getElementById('1party4').value);
+const party6_1Seats = parseInt(document.getElementById('1party6').value);
+const party8_1Seats = parseInt(document.getElementById('1party8').value);
+
+const party3_2Seats = parseInt(document.getElementById('party3').value) + parseInt(document.getElementById('1party3').value);
+const party4_2Seats = parseInt(document.getElementById('party4').value) + parseInt(document.getElementById('1party4').value);
+const party6_2Seats = parseInt(document.getElementById('party6').value) + parseInt(document.getElementById('1party6').value);
+const party8_2Seats = parseInt(document.getElementById('party8').value) + parseInt(document.getElementById('1party8').value);
+
+
+
+const atotalSeats = party1Seats + party2Seats +  party3Seats +  party4Seats +  party5Seats +  party6Seats +  party7Seats +  party8Seats;
+
+const btotalSeats = party1_1Seats + party2_1Seats + party3_1Seats + party4_1Seats + party6_1Seats + party8_1Seats + party9Seats;
+
+console.log('Total Seats:', atotalSeats, btotalSeats);
+
+if (atotalSeats > 254) {
+    const reduceBy = atotalSeats - 254;
+    alert(`지역구에서 254석을 넘어갔어요. ${reduceBy}석만큼 줄여주세요!`);
+    return;
+}
+
+if (atotalSeats < 254) {
+    const reduceBy = 254 - atotalSeats;
+    alert(`지역구에서 254석보다 모자라요. ${reduceBy}석만큼 더해주세요!`);
+    return;
+	
+	}
+	
+	if (btotalSeats > 46) {
+	
+    const reduceBy = btotalSeats - 46;
+    alert(`비례대표에서 46석을 넘어갔어요. ${reduceBy}석만큼 줄여주세요!`);
+    return;
+}
+
+if (btotalSeats < 46) {
+    const reduceBy = 46 - btotalSeats;
+    alert(`비례대표에서 46석보다 모자라요. ${reduceBy}석만큼 더해주세요!`);
+    return;
+	
+}		
+		
+		
+    Highcharts.chart('container', {
+        chart: {
+            type: 'item'
+        },
+        title: {
+            text: '22대 국회'
+        },
+        legend: {
+            labelFormat: '{name} <span style="opacity: 0.4">{y}</span>'
+        },
+        series: [{
+            name: '의석',
+            keys: ['name', 'y', 'color', 'label'],
+            data: [
+				['더불어민주당', party1Seats, '#152484', '더불어민주당'],
+				['더불어민주연합', party1_1Seats, '#152484', '더불어민주연합'],
+                ['진보당', party5Seats, '#B3F9FA', '진보당'],
+			    ['조국혁신당', party9Seats, '#0073CF', '조국혁신당'],
+                ['녹색정의당', party3_2Seats, '#007C36', '녹색정의당'],
+                ['새로운미래', party6_2Seats, '#17253E', '새로운미래'],
+			    ['기타정당', party8_2Seats, '#c9bf9b', '기타정당'],
+                ['무소속', party7Seats, '#808080', '무소속'],
+			    ['개혁신당', party4_2Seats, '#FF7920', '개혁신당'],
+				['국민의미래', party2_1Seats, '#E61E2B', '국민의미래'],
+				['국민의힘', party2Seats, '#E61E2B', '국민의힘']
+            ],
+            dataLabels: {
+                enabled: false,
+                format: '{point.label}'
+            },
+            // Circular options
+            center: ['50%', '88%'],
+            size: '170%',
+            startAngle: -100,
+            endAngle: 100
+        }]
+    });
+	 }
+        </script>
+		
+    </body>
+</html>
